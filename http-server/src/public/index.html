@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="public/style/custom.css" />
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css" />
+    <title>Video Call</title>
+  </head>
+  <body>
+    <header>
+      <h1>Custom Video Call</h1>
+    </header>
+    <main>
+      <div id="setting">
+        <h2>Select Your Camera and Audio</h2>
+        <div class="flex">
+          <video
+            id="myVideo"
+            autoplay
+            playsinline
+            width="600"
+            height="500"
+          ></video>
+          <div class="padding">
+            <h3>Camera Lists</h3>
+            <select id="cameraList"></select>
+            <h3>Mic Lists</h3>
+            <select id="micList"></select>
+            <button id="mute">Audio Mute</button>
+            <button id="turnoff">Video Turn Off</button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer></footer>
+    <script src="http://localhost:4001/socket.io/socket.io.js"></script>
+    <script src="public/js/app.js"></script>
+  </body>
+</html>

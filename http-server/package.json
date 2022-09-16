@@ -1,0 +1,16 @@
+{
+  "name": "http-server",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "nodemon"
+  },
+  "dependencies": {
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.19.0",
+    "@babel/node": "^7.18.10",
+    "@babel/preset-env": "^7.19.0",
+    "express": "^4.18.1",
+    "nodemon": "^2.0.19"
+  }
+}

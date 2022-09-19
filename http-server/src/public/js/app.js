@@ -1,4 +1,4 @@
-const socket = io("http://localhost:4001");
+const socket = io("https://tame-cities-tickle-223-194-160-132.loca.lt");
 
 // get doms
 const myVideo = document.getElementById("myVideo");
@@ -6,6 +6,33 @@ const muteBtn = document.getElementById("mute");
 const turnOffBtn = document.getElementById("turnoff");
 const cameralist = document.getElementById("cameraList");
 const miclist = document.getElementById("micList");
+
+const rooms = document.getElementById("rooms");
+const setting = document.getElementById("setting");
+
+setting.hidden = true;
+
+// rooms input events
+let roomName;
+
+const roomForm = rooms.querySelector("form");
+roomForm.addEventListener("submit", handleSubmitRoom);
+
+async function handleSubmitRoom(event) {
+  event.preventDefault();
+  const input = roomForm.querySelector("input");
+  await initCall();
+  roomName = input.value;
+  socket.emit("join_room", roomName);
+  input.value = "";
+}
+
+async function initCall() {
+  rooms.hidden = true;
+  setting.hidden = false;
+  await getMedia();
+  makeConnection();
+}
 
 // video and audio button events
 let mute = false;
@@ -78,6 +105,13 @@ miclist.addEventListener("input", handleMicChange);
 
 async function handleCameraChange() {
   await getMedia(cameralist.value);
+  if (myPeerConnection) {
+    const videoTrack = myStream.getVideoTracks()[0];
+    const videoSender = myPeerConnection
+      .getSenders()
+      .find((sender) => sender.track.kind === "video");
+    videoSender.replaceTrack(videoTrack);
+  }
 }
 
 async function handleMicChange() {
@@ -112,4 +146,73 @@ async function getMedia(deviceID) {
   }
 }
 
-getMedia();
+// sockets
+let myPeerConnection;
+
+// peer A
+socket.on("welcome", async () => {
+  const offer = await myPeerConnection.createOffer();
+  myPeerConnection.setLocalDescription(offer);
+  console.log("send the offer");
+  socket.emit("offer", offer, roomName);
+});
+
+socket.on("answer", (answer) => {
+  console.log("received the answer");
+  myPeerConnection.setRemoteDescription(answer);
+});
+
+// peer B
+socket.on("offer", async (offer) => {
+  myPeerConnection.setRemoteDescription(offer);
+  console.log("received the offer");
+  const answer = await myPeerConnection.createAnswer();
+  myPeerConnection.setLocalDescription(answer);
+  console.log("send the answer");
+  socket.emit("answer", answer, roomName);
+});
+
+// exec all peers
+socket.on("ice", (ice) => {
+  console.log("received ice candidate");
+  myPeerConnection.addIceCandidate(ice);
+});
+
+// RTC
+function makeConnection() {
+  myPeerConnection = new RTCPeerConnection({
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+          "stun:stun3.l.google.com:19302",
+          "stun:stun4.l.google.com:19302",
+        ],
+      },
+    ],
+  });
+  myPeerConnection.addEventListener("icecandidate", handleIce);
+  myPeerConnection.addEventListener("addstream", handleAddStream);
+  myStream
+    .getTracks()
+    .forEach((track) => myPeerConnection.addTrack(track, myStream));
+}
+
+function handleIce(data) {
+  console.log("sent candidate");
+  socket.emit("ice", data.candidate, roomName);
+}
+
+function handleAddStream(data) {
+  console.log("add peer stream in video");
+  const video = document.createElement("video");
+  video.srcObject = data.stream;
+  video.autoplay = true;
+  video.playsinline = true;
+  video.width = 600;
+  video.height = 500;
+  const videoList = document.querySelector("#videos");
+  videoList.appendChild(video);
+}

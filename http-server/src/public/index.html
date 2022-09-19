@@ -13,6 +13,12 @@
       <h1>Custom Video Call</h1>
     </header>
     <main>
+      <div id="rooms">
+        <form>
+          <input type="text" placeholder="room name" required />
+          <button>Enter</button>
+        </form>
+      </div>
       <div id="setting">
         <h2>Select Your Camera and Audio</h2>
         <div class="flex">
@@ -33,6 +39,7 @@
           </div>
         </div>
       </div>
+      <div id="videos"></div>
     </main>
     <footer></footer>
     <script src="http://localhost:4001/socket.io/socket.io.js"></script>

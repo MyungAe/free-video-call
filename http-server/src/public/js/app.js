@@ -1,4 +1,4 @@
-const socket = io("https://tame-cities-tickle-223-194-160-132.loca.lt");
+const socket = io("http://localhost:4001");
 
 // get doms
 const myVideo = document.getElementById("myVideo");
@@ -148,9 +148,13 @@ async function getMedia(deviceID) {
 
 // sockets
 let myPeerConnection;
+let myDataChannel;
 
 // peer A
 socket.on("welcome", async () => {
+  myDataChannel = myPeerConnection.createDataChannel("chat");
+  myDataChannel.addEventListener("message", console.log);
+  console.log("made data channel");
   const offer = await myPeerConnection.createOffer();
   myPeerConnection.setLocalDescription(offer);
   console.log("send the offer");
@@ -164,6 +168,10 @@ socket.on("answer", (answer) => {
 
 // peer B
 socket.on("offer", async (offer) => {
+  myPeerConnection.addEventListener("datachannel", (event) => {
+    myDataChannel = event.channel;
+    myDataChannel.addEventListener("message", console.log);
+  });
   myPeerConnection.setRemoteDescription(offer);
   console.log("received the offer");
   const answer = await myPeerConnection.createAnswer();

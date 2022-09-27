@@ -147,48 +147,51 @@ async function getMedia(deviceID) {
 }
 
 // sockets
-let myPeerConnection;
 let myDataChannel;
+let peerManagementObject = {};
 
 // peer A
-socket.on("welcome", async () => {
-  myDataChannel = myPeerConnection.createDataChannel("chat");
-  myDataChannel.addEventListener("message", console.log);
-  console.log("made data channel");
-  const offer = await myPeerConnection.createOffer();
-  myPeerConnection.setLocalDescription(offer);
+socket.on("welcome", async (sid) => {
+  // myDataChannel = myPeerConnection.createDataChannel("chat");
+  // myDataChannel.addEventListener("message", console.log);
+  // console.log("made data channel");
+  const newConnection = makeConnection(sid);
+  const offer = await newConnection.createOffer();
+  newConnection.setLocalDescription(offer);
   console.log("send the offer");
-  socket.emit("offer", offer, roomName);
-});
-
-socket.on("answer", (answer) => {
-  console.log("received the answer");
-  myPeerConnection.setRemoteDescription(answer);
+  socket.emit("offer", offer, sid);
 });
 
 // peer B
-socket.on("offer", async (offer) => {
-  myPeerConnection.addEventListener("datachannel", (event) => {
-    myDataChannel = event.channel;
-    myDataChannel.addEventListener("message", console.log);
-  });
-  myPeerConnection.setRemoteDescription(offer);
+socket.on("offer", async (offer, sid) => {
+  // myPeerConnection.addEventListener("datachannel", (event) => {
+  //   myDataChannel = event.channel;
+  //   myDataChannel.addEventListener("message", console.log);
+  // });
+  const receiveConnection = makeConnection(sid);
+  await receiveConnection.setRemoteDescription(offer);
   console.log("received the offer");
-  const answer = await myPeerConnection.createAnswer();
-  myPeerConnection.setLocalDescription(answer);
+  const answer = await receiveConnection.createAnswer();
+  receiveConnection.setLocalDescription(answer);
+  socket.emit("answer", answer, sid);
   console.log("send the answer");
-  socket.emit("answer", answer, roomName);
+});
+
+// peer A
+socket.on("answer", async (answer, sid) => {
+  console.log("received the answer");
+  await peerManagementObject[sid].setRemoteDescription(answer);
 });
 
 // exec all peers
-socket.on("ice", (ice) => {
+socket.on("ice", async (ice, sid) => {
   console.log("received ice candidate");
-  myPeerConnection.addIceCandidate(ice);
+  await peerManagementObject[sid].addIceCandidate(ice);
 });
 
 // RTC
-function makeConnection() {
-  myPeerConnection = new RTCPeerConnection({
+function makeConnection(sid) {
+  const myPeerConnection = new RTCPeerConnection({
     iceServers: [
       {
         urls: [
@@ -201,16 +204,24 @@ function makeConnection() {
       },
     ],
   });
-  myPeerConnection.addEventListener("icecandidate", handleIce);
-  myPeerConnection.addEventListener("addstream", handleAddStream);
+  myPeerConnection.addEventListener("icecandidate", (data) =>
+    handleIce(data, sid)
+  );
+  myPeerConnection.addEventListener("addstream", (data) =>
+    handleAddStream(data)
+  );
   myStream
     .getTracks()
     .forEach((track) => myPeerConnection.addTrack(track, myStream));
+
+  peerManagementObject[sid] = myPeerConnection;
+
+  return myPeerConnection;
 }
 
-function handleIce(data) {
+function handleIce(data, sid) {
   console.log("sent candidate");
-  socket.emit("ice", data.candidate, roomName);
+  socket.emit("ice", data.candidate, sid);
 }
 
 function handleAddStream(data) {

@@ -2,22 +2,25 @@ import SocketIO from "socket.io";
 
 const io = SocketIO(4001, {
   cors: {
-    origin: "http://localhost:3001",
+    origin: "*",
   },
 });
+
+let roomObjArr = [];
+const MAXCLIENT = 5;
 
 io.on("connection", (socket) => {
   socket.on("join_room", (roomName) => {
     socket.join(roomName);
-    socket.to(roomName).emit("welcome");
+    socket.to(roomName).emit("welcome", socket.id);
   });
-  socket.on("offer", (offer, roomName) => {
-    socket.to(roomName).emit("offer", offer);
+  socket.on("offer", (offer, sid) => {
+    socket.to(sid).emit("offer", offer, socket.id);
   });
-  socket.on("answer", (answer, roomName) => {
-    socket.to(roomName).emit("answer", answer);
+  socket.on("answer", (answer, sid) => {
+    socket.to(sid).emit("answer", answer, socket.id);
   });
-  socket.on("ice", (ice, roomName) => {
-    socket.to(roomName).emit("ice", ice);
+  socket.on("ice", (ice, sid) => {
+    socket.to(sid).emit("ice", ice, socket.id);
   });
 });

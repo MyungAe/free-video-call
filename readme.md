@@ -9,6 +9,7 @@
 - [ ] stun 서버 직접 만들기
 - [ ] localtunnel와 핸드폰을 이용했을 때 js 적용 안되는 현상 해결 >> localtunnel 말고 핫스팟 사용, ip로 접근해 테스트할 예정 >> webrtc는 보안상 localhost, https에서만 작동
 - [x] 1:1 구조를 N:N 구조로 변경
+- [ ] 서버가 룸, 인원수, 유저 sid를 기억하고 있도록 수정하고, disconnecting한 유저 발생 시 클라이언트에 반영하도록 로직 수정(클라이언트가 sid값을 갖고 있어야 함)
 
 ## tests
 

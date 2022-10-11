@@ -2,7 +2,7 @@ import SocketIO from "socket.io";
 
 const io = SocketIO(4001, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:3001",
   },
 });
 
@@ -23,4 +23,7 @@ io.on("connection", (socket) => {
   socket.on("ice", (ice, sid) => {
     socket.to(sid).emit("ice", ice, socket.id);
   });
+  // socket.on("disconnecting", () => {
+  //   socket.to(roomName).emit("leave_room", socket.id);
+  // });
 });

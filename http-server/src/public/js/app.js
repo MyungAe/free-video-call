@@ -2,6 +2,7 @@ const socket = io("http://localhost:4001");
 
 // get doms
 const myVideo = document.getElementById("myVideo");
+const myVideo2 = document.getElementById("myVideo2");
 const muteBtn = document.getElementById("mute");
 const turnOffBtn = document.getElementById("turnoff");
 const cameralist = document.getElementById("cameraList");
@@ -9,8 +10,10 @@ const miclist = document.getElementById("micList");
 
 const rooms = document.getElementById("rooms");
 const setting = document.getElementById("setting");
+const videos = document.getElementById("videos");
 
 setting.hidden = true;
+videos.hidden = true;
 
 // rooms input events
 let roomName;
@@ -53,6 +56,7 @@ function handleMuteClick() {
     mute = false;
   }
 }
+
 function handleTurnOffClick() {
   myStream
     .getVideoTracks()
@@ -138,6 +142,7 @@ async function getMedia(deviceID) {
   try {
     myStream = await navigator.mediaDevices.getUserMedia(constrains);
     myVideo.srcObject = myStream;
+    myVideo2.srcObject = myStream;
     if (!deviceID) getDeviceList(devices);
     if (mute)
       myStream.getAudioTracks().forEach((track) => (track.enabled = false));
@@ -158,8 +163,8 @@ socket.on("welcome", async (sid) => {
   const newConnection = makeConnection(sid);
   const offer = await newConnection.createOffer();
   newConnection.setLocalDescription(offer);
-  console.log("send the offer");
   socket.emit("offer", offer, sid);
+  console.log("send the offer");
 });
 
 // peer B
@@ -188,6 +193,11 @@ socket.on("ice", async (ice, sid) => {
   console.log("received ice candidate");
   await peerManagementObject[sid].addIceCandidate(ice);
 });
+
+// // exit video calls
+// socket.on("leave_room", (sid) => {
+//   removeVideo(sid);
+// });
 
 // RTC
 function makeConnection(sid) {
@@ -230,8 +240,16 @@ function handleAddStream(data) {
   video.srcObject = data.stream;
   video.autoplay = true;
   video.playsinline = true;
-  video.width = 600;
-  video.height = 500;
+  video.width = 400;
+  video.height = 300;
   const videoList = document.querySelector("#videos");
   videoList.appendChild(video);
 }
+
+// show video calls
+const next = document.getElementById("next");
+next.addEventListener("click", (event) => {
+  event.preventDefault();
+  videos.hidden = false;
+  setting.hidden = true;
+});
